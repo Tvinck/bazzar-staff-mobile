@@ -2,67 +2,74 @@ const tg = window.Telegram?.WebApp;
 
 export const haptic = {
     impact: (style = 'medium') => {
-        // style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft'
-        if (tg?.HapticFeedback) {
-            tg.HapticFeedback.impactOccurred(style);
-        } else if (navigator.vibrate) {
-            // Fallback
-            if (style === 'light') navigator.vibrate(10);
-            if (style === 'medium') navigator.vibrate(20);
-            if (style === 'heavy') navigator.vibrate(40);
+        try {
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred(style);
+            } else if (navigator.vibrate) {
+                if (style === 'light') navigator.vibrate(10);
+                if (style === 'medium') navigator.vibrate(20);
+                if (style === 'heavy') navigator.vibrate(40);
+            }
+        } catch (e) {
+            console.warn('Haptic impact not supported', e);
         }
     },
     notification: (type = 'success') => {
-        // type: 'error' | 'success' | 'warning'
-        if (tg?.HapticFeedback) {
-            tg.HapticFeedback.notificationOccurred(type);
-        } else if (navigator.vibrate) {
-            if (type === 'success') navigator.vibrate([10, 30, 10]);
-            if (type === 'error') navigator.vibrate([50, 50, 50]);
-            if (type === 'warning') navigator.vibrate([30, 30]);
+        try {
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred(type);
+            } else if (navigator.vibrate) {
+                if (type === 'success') navigator.vibrate([10, 30, 10]);
+                if (type === 'error') navigator.vibrate([50, 50, 50]);
+                if (type === 'warning') navigator.vibrate([30, 30]);
+            }
+        } catch (e) {
+            console.warn('Haptic notification not supported', e);
         }
     },
     selection: () => {
-        if (tg?.HapticFeedback) {
-            tg.HapticFeedback.selectionChanged();
+        try {
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.selectionChanged();
+            }
+        } catch (e) {
+            console.warn('Haptic selection not supported', e);
         }
     }
 };
 
 /**
  * Показать нативный Popup Telegram
- * @param {Object} params - Параметры попапа
- * @param {string} params.title - Заголовок
- * @param {string} params.message - Сообщение
- * @param {Array} params.buttons - Массив кнопок
- * @returns {Promise<string>} ID нажатой кнопки
  */
 export const showPopup = (params) => {
     if (!tg?.showPopup) {
-        // Fallback для веб-версии
         const result = window.confirm(params.message);
         return Promise.resolve(result ? 'ok' : 'cancel');
     }
 
     return new Promise((resolve) => {
-        const buttons = params.buttons || [
-            { id: 'ok', type: 'ok', text: 'OK' }
-        ];
+        try {
+            const buttons = params.buttons || [
+                { id: 'ok', type: 'ok', text: 'OK' }
+            ];
 
-        tg.showPopup({
-            title: params.title || '',
-            message: params.message,
-            buttons: buttons
-        }, (buttonId) => {
-            resolve(buttonId);
-        });
+            tg.showPopup({
+                title: params.title || '',
+                message: params.message,
+                buttons: buttons
+            }, (buttonId) => {
+                resolve(buttonId);
+            });
+        } catch (e) {
+            console.error('tg.showPopup failed', e);
+            const result = window.confirm(params.message);
+            resolve(result ? 'ok' : 'cancel');
+        }
     });
 };
 
 /**
- * Показать Alert (упрощенная версия popup)
- * @param {string} message - Сообщение
- * @param {string} title - Заголовок (опционально)
+ * Показать Alert
  */
 export const showAlert = async (message, title = '') => {
     if (!tg?.showAlert) {
@@ -71,15 +78,18 @@ export const showAlert = async (message, title = '') => {
     }
 
     return new Promise((resolve) => {
-        tg.showAlert(message, resolve);
+        try {
+            tg.showAlert(message, resolve);
+        } catch (e) {
+            console.error('tg.showAlert failed', e);
+            window.alert(message);
+            resolve();
+        }
     });
 };
 
 /**
  * Показать Confirm диалог
- * @param {string} message - Сообщение
- * @param {string} title - Заголовок
- * @returns {Promise<boolean>} true если OK, false если Cancel
  */
 export const showConfirm = async (message, title = 'Подтверждение') => {
     if (!tg?.showConfirm) {
@@ -87,21 +97,19 @@ export const showConfirm = async (message, title = 'Подтверждение')
     }
 
     return new Promise((resolve) => {
-        tg.showConfirm(message, (confirmed) => {
-            resolve(confirmed);
-        });
+        try {
+            tg.showConfirm(message, (confirmed) => {
+                resolve(confirmed);
+            });
+        } catch (e) {
+            console.error('tg.showConfirm failed', e);
+            resolve(window.confirm(message));
+        }
     });
 };
 
 /**
  * Показать диалог с кастомными кнопками
- * @param {Object} params
- * @param {string} params.title - Заголовок
- * @param {string} params.message - Сообщение
- * @param {string} params.okText - Текст кнопки OK (по умолчанию "OK")
- * @param {string} params.cancelText - Текст кнопки Cancel (по умолчанию "Отмена")
- * @param {boolean} params.destructive - Сделать OK кнопку красной (по умолчанию false)
- * @returns {Promise<boolean>} true если OK, false если Cancel
  */
 export const showDialog = async (params) => {
     const {
@@ -132,23 +140,26 @@ export const showDialog = async (params) => {
 export const setupTelegramApp = () => {
     if (!tg) return;
 
-    // 1. Expand
-    tg.expand();
+    try {
+        // 1. Expand
+        if (tg.expand) tg.expand();
 
-    // 2. Data Protection (Close Confirmation)
-    if (tg.enableClosingConfirmation) {
-        tg.enableClosingConfirmation();
-    }
+        // 2. Data Protection
+        if (tg.enableClosingConfirmation) {
+            tg.enableClosingConfirmation();
+        }
 
-    // 3. Colors
-    // We force Dark Mode for this specific app design
-    if (tg.setHeaderColor) {
-        tg.setHeaderColor('#1c1c1e'); // Main background color
-    }
-    if (tg.setBackgroundColor) {
-        tg.setBackgroundColor('#1c1c1e');
-    }
+        // 3. Colors
+        if (tg.setHeaderColor) {
+            tg.setHeaderColor('#1c1c1e');
+        }
+        if (tg.setBackgroundColor) {
+            tg.setBackgroundColor('#1c1c1e');
+        }
 
-    // 4. Ready
-    tg.ready();
+        // 4. Ready
+        if (tg.ready) tg.ready();
+    } catch (e) {
+        console.warn('setupTelegramApp encountered unsupported methods', e);
+    }
 };

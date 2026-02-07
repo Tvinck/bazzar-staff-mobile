@@ -1,7 +1,8 @@
-import { ArrowLeft, Bell, CheckCircle, AlertTriangle, Gift, DollarSign, MessageCircle, Send, X } from 'lucide-react';
+import { ArrowLeft, Bell, AlertTriangle, Gift, DollarSign, MessageCircle, Send, Wallet, ShieldAlert } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Notifications = () => {
     const navigate = useNavigate();
@@ -14,8 +15,6 @@ const Notifications = () => {
             const { data: { user } } = await supabase.auth.getUser();
             setCurrentUser(user);
 
-            // Check Bot Connection (Mock check via localStorage or check DB if time permitted)
-            // Real check would be: await supabase.from('bot_users').select('*').eq('user_id', user.id).single();
             const connected = localStorage.getItem('bazzar_bot_connected');
             if (connected) setIsBotConnected(true);
 
@@ -48,134 +47,171 @@ const Notifications = () => {
     };
 
     const markAllRead = async () => {
-        // UI Optimistic
         setNotifications(notifications.map(n => ({ ...n, is_read: true })));
 
-        // DB Update
         if (currentUser) {
             await supabase
                 .from('notifications')
                 .update({ is_read: true })
                 .eq('user_id', currentUser.id)
-                .eq('is_read', false); // Only update unread
+                .eq('is_read', false);
         }
     };
 
     const handleConnectBot = () => {
         if (!currentUser) return;
         window.open(`https://t.me/bazzar_staff_bot?start=connect_${currentUser.id}`, '_blank');
-        // We set local storage optimistically, but real confirmation comes from DB in future loads
         localStorage.setItem('bazzar_bot_connected', 'true');
         setIsBotConnected(true);
     };
 
     const getIcon = (type) => {
         switch (type) {
-            case 'order': return <Gift className="w-5 h-5 text-blue-400" />;
-            case 'system': return <Bell className="w-5 h-5 text-purple-400" />;
-            case 'task': return <DollarSign className="w-5 h-5 text-emerald-400" />;
-            case 'alert': return <AlertTriangle className="w-5 h-5 text-red-400" />;
+            case 'order': return <Gift className="w-5 h-5 text-accent-blue" />;
+            case 'system': return <Bell className="w-5 h-5 text-accent-purple" />;
+            case 'task': return <Wallet className="w-5 h-5 text-accent-green" />;
+            case 'alert': return <ShieldAlert className="w-5 h-5 text-accent-red" />;
             default: return <MessageCircle className="w-5 h-5 text-zinc-400" />;
         }
     };
 
     const getBgColor = (type) => {
         switch (type) {
-            case 'order': return 'bg-blue-500/10 border-blue-500/20';
-            case 'system': return 'bg-purple-500/10 border-purple-500/20';
-            case 'task': return 'bg-emerald-500/10 border-emerald-500/20';
-            case 'alert': return 'bg-red-500/10 border-red-500/20';
-            default: return 'bg-zinc-800 border-zinc-700';
+            case 'order': return 'bg-accent-blue/10 border-accent-blue/20 shadow-[0_0_15px_rgba(59,130,246,0.15)]';
+            case 'system': return 'bg-accent-purple/10 border-accent-purple/20 shadow-[0_0_15px_rgba(168,85,247,0.15)]';
+            case 'task': return 'bg-accent-green/10 border-accent-green/20 shadow-[0_0_15px_rgba(34,197,94,0.15)]';
+            case 'alert': return 'bg-accent-red/10 border-accent-red/20 shadow-[0_0_15px_rgba(239,68,68,0.15)]';
+            default: return 'bg-white/5 border-white/5';
         }
     };
 
+    const container = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: { staggerChildren: 0.05 }
+        }
+    };
+
+    const item = {
+        hidden: { opacity: 0, x: -20 },
+        show: { opacity: 1, x: 0 }
+    };
+
     return (
-        <div className="min-h-screen bg-[#09090b] pb-20">
+        <div className="min-h-screen bg-tg-bg pb-24 relative overflow-hidden">
+            <div className="fixed top-0 right-0 w-[300px] h-[300px] bg-accent-purple/10 blur-[100px] rounded-full pointer-events-none" />
+
             {/* Header */}
-            <div className="glass-panel border-b border-white/5 pt-12 pb-4 px-4 sticky top-0 z-10 backdrop-blur-xl bg-[#09090b]/80">
-                <div className="flex items-center justify-between mb-2">
+            <div className="glass border-b border-white/5 pt-safe px-4 pb-4 sticky top-0 z-20 backdrop-blur-xl">
+                <div className="flex items-center justify-between mt-2">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => navigate(-1)}
-                            className="w-10 h-10 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
+                            className="w-10 h-10 rounded-xl flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/5 active:bg-white/10 transition-colors"
                         >
                             <ArrowLeft className="w-5 h-5" />
                         </button>
-                        <h1 className="text-xl font-bold text-white">Уведомления</h1>
+                        <h1 className="text-xl font-bold text-white tracking-tight">Уведомления</h1>
                     </div>
 
                     <button
                         onClick={markAllRead}
-                        className="text-xs font-bold text-blue-400 active:text-blue-300 transition-colors"
+                        className="text-xs font-bold text-accent-blue active:text-blue-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-accent-blue/10"
                     >
                         Прочитать все
                     </button>
                 </div>
             </div>
 
-            <div className="p-4 space-y-4">
+            <motion.div
+                className="p-4 space-y-4 relative z-10"
+                initial="hidden"
+                animate="show"
+                variants={container}
+            >
                 {/* Bot Connect Banner */}
                 {!isBotConnected && (
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-4 shadow-lg shadow-blue-500/20 relative overflow-hidden">
+                    <motion.div variants={item} className="relative overflow-hidden rounded-3xl p-5 border border-white/10 group">
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-90 transition-opacity" />
+                        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
+
                         <div className="relative z-10">
-                            <h3 className="text-white font-bold text-lg mb-1">Push-уведомления</h3>
-                            <p className="text-blue-100 text-sm mb-3 max-w-[80%]">Получайте заказы мгновенно прямо в Telegram</p>
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="p-2 bg-white/20 backdrop-blur-sm rounded-xl">
+                                    <Bell className="w-5 h-5 text-white" />
+                                </div>
+                                <h3 className="text-white font-bold text-lg">Push-уведомления</h3>
+                            </div>
+                            <p className="text-blue-100 text-sm mb-4 max-w-[85%] leading-relaxed opacity-90">
+                                Получайте заказы мгновенно прямо в Telegram бот
+                            </p>
                             <button
                                 onClick={handleConnectBot}
-                                className="bg-white text-blue-600 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 active:scale-95 transition-transform"
+                                className="bg-white text-blue-600 px-5 py-3 rounded-xl text-sm font-bold flex items-center gap-2 active:scale-95 transition-all shadow-xl shadow-black/20"
                             >
                                 <Send className="w-4 h-4" />
                                 Подключить бота
                             </button>
                         </div>
-                        <div className="absolute -right-4 -bottom-4 opacity-30">
-                            <Bell className="w-24 h-24 text-white -rotate-12" />
+                        <div className="absolute -right-6 -bottom-6 opacity-20 group-hover:scale-110 transition-transform duration-700">
+                            <Bell className="w-32 h-32 text-white -rotate-12" />
                         </div>
-                    </div>
+                    </motion.div>
                 )}
 
                 {notifications.length === 0 ? (
-                    <div className="text-center py-20">
-                        <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <motion.div variants={item} className="text-center py-20">
+                        <div className="w-20 h-20 bg-white/5 rounded-[2rem] flex items-center justify-center mx-auto mb-6 border border-white/5 shadow-inner">
                             <Bell className="w-8 h-8 text-zinc-600" />
                         </div>
-                        <p className="text-zinc-500">Уведомлений нет</p>
-                    </div>
+                        <h3 className="text-white font-bold mb-1">Нет новых уведомлений</h3>
+                        <p className="text-zinc-500 text-sm">Здесь будут отображаться важные события</p>
+                    </motion.div>
                 ) : (
                     <div className="space-y-3">
-                        {notifications.map(n => (
-                            <div
-                                key={n.id}
-                                className={`relative overflow-hidden rounded-2xl p-4 border transition-all ${n.is_read ? 'bg-transparent border-white/5 opacity-70' : 'bg-white/[0.02] border-white/10'
-                                    }`}
-                            >
-                                {!n.is_read && (
-                                    <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_#3b82f6]"></div>
-                                )}
+                        <AnimatePresence initial={false}>
+                            {notifications.map(n => (
+                                <motion.div
+                                    key={n.id}
+                                    variants={item}
+                                    layout
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    className={`relative overflow-hidden rounded-2xl p-4 border transition-all group ${n.is_read
+                                            ? 'bg-transparent border-white/5 opacity-60 hover:opacity-100'
+                                            : 'glass-card border-white/10'
+                                        }`}
+                                >
+                                    {!n.is_read && (
+                                        <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-accent-blue shadow-[0_0_8px_#3b82f6] animate-pulse"></div>
+                                    )}
 
-                                <div className="flex gap-4">
-                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center border shrink-0 ${getBgColor(n.type)}`}>
-                                        {getIcon(n.type)}
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex justify-between items-start pr-4">
-                                            <h3 className={`font-bold text-sm mb-1 ${n.is_read ? 'text-zinc-400' : 'text-white'}`}>
-                                                {n.title}
-                                            </h3>
+                                    <div className="flex gap-4">
+                                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center border shrink-0 transition-transform group-hover:scale-105 ${getBgColor(n.type)}`}>
+                                            {getIcon(n.type)}
                                         </div>
-                                        <p className="text-xs text-zinc-500 leading-relaxed mb-2">
-                                            {n.message}
-                                        </p>
-                                        <p className="text-[10px] text-zinc-600 font-medium">
-                                            {new Date(n.created_at).toLocaleString()}
-                                        </p>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex justify-between items-start pr-4 mb-1">
+                                                <h3 className={`font-bold text-sm truncate ${n.is_read ? 'text-zinc-400' : 'text-white'}`}>
+                                                    {n.title}
+                                                </h3>
+                                            </div>
+                                            <p className="text-xs text-zinc-500 leading-relaxed mb-2 line-clamp-2">
+                                                {n.message}
+                                            </p>
+                                            <p className="text-[10px] text-zinc-600 font-mono">
+                                                {new Date(n.created_at).toLocaleString('ru-RU')}
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
-                        ))}
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
                     </div>
                 )}
-            </div>
+            </motion.div>
         </div>
     );
 };

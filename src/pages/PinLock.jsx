@@ -122,89 +122,140 @@ const PinLock = ({ onSuccess, onForgot, mode: propMode }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-[#09090b] z-50 flex flex-col items-center justify-center p-6 text-white safe-area-inset-bottom">
-            <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm">
+        <div className="fixed inset-0 bg-tg-bg z-50 flex flex-col items-center justify-center p-6 text-white safe-area-inset-bottom overflow-hidden">
+            {/* Ambient Background */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] bg-accent-blue/10 rounded-full blur-[100px] animate-pulse-glow"></div>
+                <div className="absolute bottom-[-20%] left-[-10%] w-[400px] h-[400px] bg-accent-purple/10 rounded-full blur-[100px] animate-float"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-white/5 rounded-full blur-[80px]"></div>
+            </div>
+
+            <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm relative z-10">
                 {/* Icon & Message */}
                 <motion.div
-                    initial={{ scale: 0.5, opacity: 0 }}
+                    initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="mb-8 text-center"
+                    transition={{ duration: 0.5 }}
+                    className="mb-12 text-center"
                 >
-                    <div className="w-16 h-16 glass-panel rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl shadow-black/40">
-                        {mode === 'check' ? <Lock className="w-8 h-8 text-blue-500" /> : <ShieldCheck className="w-8 h-8 text-emerald-500" />}
+                    <div className="w-20 h-20 glass rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(0,0,0,0.3)] border border-white/10">
+                        {mode === 'check' ? (
+                            <div className="relative">
+                                <Lock className="w-8 h-8 text-white relative z-10" />
+                                <div className="absolute inset-0 bg-accent-blue/50 blur-lg rounded-full"></div>
+                            </div>
+                        ) : (
+                            <div className="relative">
+                                <ShieldCheck className="w-8 h-8 text-accent-green relative z-10" />
+                                <div className="absolute inset-0 bg-accent-green/50 blur-lg rounded-full"></div>
+                            </div>
+                        )}
                     </div>
-                    <h2 className="text-xl font-bold mb-2 tracking-wide">BAZZAR Staff</h2>
-                    <p className={`text-sm ${error ? 'text-red-400' : 'text-zinc-400'} transition-colors duration-300 font-medium`}>
-                        {error ? 'Неверный код' : message}
-                    </p>
+                    <motion.h2
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-2xl font-bold mb-2 tracking-tight"
+                    >
+                        BAZZAR Staff
+                    </motion.h2>
+                    <motion.p
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className={`text-sm ${error ? 'text-accent-red' : 'text-zinc-400'} transition-colors duration-300 font-medium`}
+                    >
+                        {error ? 'Неверный код доступа' : message}
+                    </motion.p>
                 </motion.div>
 
                 {/* Dots */}
-                <div className="flex gap-4 mb-12">
+                <motion.div
+                    className="flex gap-6 mb-16"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                >
                     {[...Array(4)].map((_, i) => (
                         <motion.div
                             key={i}
                             initial={false}
                             animate={{
                                 scale: i < pin.length ? 1.2 : 1,
+                                height: i < pin.length ? 16 : 12,
+                                width: i < pin.length ? 16 : 12,
                                 backgroundColor: error
-                                    ? '#ef4444'
+                                    ? '#ef4444' // Red-500
                                     : i < pin.length
-                                        ? '#3b82f6'
-                                        : 'rgba(255, 255, 255, 0.1)'
+                                        ? '#3b82f6' // Blue-500
+                                        : 'rgba(255, 255, 255, 0.15)',
+                                boxShadow: i < pin.length ? '0 0 10px rgba(59, 130, 246, 0.5)' : 'none'
                             }}
-                            className="w-4 h-4 rounded-full transition-colors duration-200"
+                            className="rounded-full transition-all duration-300"
                         />
                     ))}
-                </div>
+                </motion.div>
 
                 {/* Keypad */}
-                <div className="grid grid-cols-3 gap-6 w-full">
+                <motion.div
+                    className="grid grid-cols-3 gap-x-8 gap-y-6 w-full px-4"
+                    initial={{ y: 50, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.5, duration: 0.4 }}
+                >
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-                        <button
+                        <motion.button
                             key={num}
+                            whileTap={{ scale: 0.9, backgroundColor: "rgba(255,255,255,0.2)" }}
                             onClick={() => handlePress(num)}
-                            className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center text-3xl font-light border border-white/5 active:bg-blue-600 active:border-blue-500 active:text-white transition-all mx-auto shadow-lg backdrop-blur-md"
+                            className="w-20 h-20 rounded-full glass border border-white/5 flex items-center justify-center text-3xl font-light text-white transition-colors shadow-lg active:shadow-inner"
                         >
                             {num}
-                        </button>
+                        </motion.button>
                     ))}
 
                     {/* FaceID Button or Spacer */}
                     <div className="flex items-center justify-center">
                         {isBiometricAvailable ? (
-                            <button
+                            <motion.button
+                                whileTap={{ scale: 0.9 }}
                                 onClick={handleBiometricAuth}
-                                className="w-20 h-20 rounded-full flex items-center justify-center text-blue-400 active:text-white active:bg-blue-600/20 transition-all mx-auto"
+                                className="w-20 h-20 rounded-full flex items-center justify-center text-accent-blue hover:text-white transition-all mx-auto"
                             >
                                 <ScanFace className="w-8 h-8" />
-                            </button>
+                            </motion.button>
                         ) : (
                             <div className="w-20 h-20"></div>
                         )}
                     </div>
 
-                    <button
+                    <motion.button
+                        whileTap={{ scale: 0.9, backgroundColor: "rgba(255,255,255,0.2)" }}
                         onClick={() => handlePress(0)}
-                        className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center text-3xl font-light border border-white/5 active:bg-blue-600 active:border-blue-500 active:text-white transition-all mx-auto shadow-lg backdrop-blur-md"
+                        className="w-20 h-20 rounded-full glass border border-white/5 flex items-center justify-center text-3xl font-light text-white transition-colors shadow-lg active:shadow-inner"
                     >
                         0
-                    </button>
-                    <button
+                    </motion.button>
+
+                    <motion.button
+                        whileTap={{ scale: 0.9 }}
                         onClick={handleDelete}
-                        className="w-20 h-20 rounded-full flex items-center justify-center text-zinc-500 active:text-white active:bg-white/10 transition-all mx-auto"
+                        className="w-20 h-20 rounded-full flex items-center justify-center text-zinc-500 hover:text-white transition-all mx-auto"
                     >
                         <Delete className="w-8 h-8" />
-                    </button>
-                </div>
+                    </motion.button>
+                </motion.div>
             </div>
 
-            <button
+            <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
                 onClick={onForgot}
-                className="mt-8 text-sm text-zinc-500 font-medium active:text-white transition-colors"
+                className="mt-8 text-sm text-zinc-500 font-medium hover:text-white transition-colors active:scale-95 py-2 px-4 rounded-lg hover:bg-white/5"
             >
                 Забыли код? Войти через пароль
-            </button>
+            </motion.button>
         </div>
     );
 };

@@ -1,3 +1,4 @@
+/* eslint-disable no-undef, no-unused-vars */
 
 // bot-bridge.js
 // This script bridges Supabase Notifications -> Telegram Bot

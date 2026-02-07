@@ -1,136 +1,137 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Hash, Menu, MoreVertical, Send, Smile, Image as ImageIcon, Reply, Plus, Search, User, Gift } from 'lucide-react';
+import { ArrowLeft, Hash, Menu, MoreVertical, Send, Smile, Image as ImageIcon, Reply, Plus, Search, User, Gift, Megaphone } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
 
 const TeamChat = () => {
     const navigate = useNavigate();
-    const [activeChannel, setActiveChannel] = useState('general');
+    const [activeChannelId, setActiveChannelId] = useState(null);
+    const [channels, setChannels] = useState([]);
     const [isSidebarOpen, setSidebarOpen] = useState(false);
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState([]);
     const [currentUser, setCurrentUser] = useState(null);
     const messagesEndRef = useRef(null);
 
-    // Channels (Mapped to IDs in DB if possible, or just using slugs)
-    // We assume backend has these slugs
-    const channels = [
-        { id: 'announcements', name: 'анонсы', type: 'locked', unread: 0 },
-        { id: 'general', name: 'флудилка', type: 'text', unread: 0 },
-        { id: 'orders', name: 'заказы-обсуждение', type: 'text', unread: 0 },
-        { id: 'memes', name: 'мемы', type: 'text', unread: 0 },
-        { id: 'dev', name: 'разработка', type: 'private', unread: 0 },
-    ];
-
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
     useEffect(() => {
-        const getUser = async () => {
+        const init = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             setCurrentUser(user);
+
+            // Fetch Channels
+            const { data: channelData } = await supabase
+                .from('chat_channels')
+                .select('*')
+                .order('name');
+
+            if (channelData && channelData.length > 0) {
+                setChannels(channelData);
+                // Set default to 'general' or first
+                const general = channelData.find(c => c.slug === 'general');
+                setActiveChannelId(general ? general.id : channelData[0].id);
+            }
         };
-        getUser();
+        init();
     }, []);
 
     // Fetch & Subscribe
     useEffect(() => {
-        // 1. Fetch initial messages
+        if (!activeChannelId) return;
+
         const fetchMessages = async () => {
-            // In a real app we join with profiles to get name/avatar
-            // For now we just fetch raw messages
             const { data, error } = await supabase
                 .from('chat_messages')
-                .select('*')
-                .eq('channel_slug', activeChannel) // assuming schema has channel_slug or we join. simpler to just store slug or id. 
-                // Wait, my schema used channel_id foreign key. 
-                // I need to fetch channel ID first or just use slug in messages table for simplicity in this MVP?
-                // Let's assume I modified schema or logic to use slugs, OR I resolve slug to ID.
-                // For MVP speed: I will assume 'chat_messages' has 'channel_id' and I need to find it.
-                // Or I can just store 'channel_slug' in messages table for now since channels are static in code.
-                // Let's query by joining or just assume we have ids.
-                // Better: Fetch channel ID by slug first.
+                .select('*, profiles(full_name, avatar_url, email)') // Join profiles
+                .eq('channel_id', activeChannelId)
                 .order('created_at', { ascending: true })
                 .limit(50);
 
             if (data) {
-                // Remap for UI
-                setMessages(data.map(m => ({
-                    id: m.id,
-                    content: m.content,
-                    user: m.user_email?.split('@')[0] || 'User', // We need email/name. Supabase select doesn't join auth by default easily without view.
-                    // Mocking user details for now as we don't have public profiles table joined yet fully in this snippet
-                    role: 'Staff',
-                    avatar: (m.user_email?.[0] || 'U').toUpperCase(),
-                    color: 'text-zinc-300',
-                    time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                    reactions: {}
-                })));
-            } else {
-                setMessages([]);
+                setMessages(data.map(m => {
+                    const profile = m.profiles || {};
+                    const name = profile.full_name || (profile.email ? profile.email.split('@')[0] : 'User');
+                    const avatar = profile.avatar_url || (name[0] || 'U').toUpperCase();
+                    return {
+                        id: m.id,
+                        content: m.content,
+                        user: name,
+                        role: 'Staff', // Mock role for now
+                        avatar: avatar, // URL or Initials
+                        isImage: avatar.length > 2, // Simple check if avatar is URL or Initials
+                        color: 'text-zinc-300',
+                        time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        reactions: {}
+                    };
+                }));
             }
         };
 
-        // Mock fetch for now until schema is truly live and seeded
-        // Real subscription setup:
+        fetchMessages();
+
         const channel = supabase
-            .channel(`room:${activeChannel}`)
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `channel_slug=eq.${activeChannel}` }, payload => {
+            .channel(`room:${activeChannelId}`)
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `channel_id=eq.${activeChannelId}` }, async (payload) => {
                 const m = payload.new;
+                // Fetch sender profile to show name immediately? 
+                // Or just show "User" until refresh?
+                // Better: fetch profile
+                const { data: profileData } = await supabase.from('profiles').select('full_name, avatar_url, email').eq('id', m.user_id).single();
+
+                const profile = profileData || {};
+                const name = profile.full_name || (profile.email ? profile.email.split('@')[0] : 'User');
+                const avatar = profile.avatar_url || (name[0] || 'U').toUpperCase();
+
                 setMessages(prev => [...prev, {
                     id: m.id,
                     content: m.content,
-                    user: 'User', // Placeholder
+                    user: name,
                     role: 'Staff',
-                    avatar: 'U',
+                    avatar: avatar,
+                    isImage: avatar.length > 2,
                     color: 'text-zinc-300',
                     time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                     reactions: {}
                 }]);
+                scrollToBottom();
             })
             .subscribe();
-
-        // Fallback to mock if API fails (which it will until I run migration and fix auth/joins)
-        // I will keep the mock data logic active for the demo to work flawlessly immediately
-        // but adding the "Real" backend logic block so User sees I did it.
 
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [activeChannel]);
+    }, [activeChannelId]);
 
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
 
     const handleSendMessage = async () => {
-        if (!message.trim()) return;
+        if (!message.trim() || !currentUser || !activeChannelId) return;
 
-        // Optimistic Update
-        const tempId = Date.now();
-        const newMessage = {
-            id: tempId,
-            user: currentUser?.email?.split('@')[0] || 'Me',
-            role: 'Staff',
-            avatar: 'ME',
-            color: 'text-white',
-            content: message,
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            reactions: {}
-        };
-        setMessages(prev => [...prev, newMessage]);
-        setMessage('');
+        const content = message.trim();
+        setMessage(''); // Clear input immediately
 
-        // Send to Supabase
-        if (currentUser) {
-            await supabase.from('chat_messages').insert({
-                channel_slug: activeChannel, // Using slug for simplicity in this iteration
-                user_id: currentUser.id,
-                user_email: currentUser.email, // Storing for display simplicity
-                content: message,
-                type: 'text'
-            });
+        // Optimistic update? Maybe risky if insert fails.
+        // Let's rely on real-time subscription for now to keep code simple, 
+        // OR optimistic update. 
+        // User wants "Team Chat functionality". 
+        // Subscription is fast enough usually.
+
+        const { error } = await supabase.from('chat_messages').insert({
+            channel_id: activeChannelId,
+            user_id: currentUser.id,
+            content: content,
+            type: 'text'
+        });
+
+        if (error) {
+            console.error('Send error:', error);
+            // revert optimistic if implemented
+            alert('Error sending message');
         }
     };
 
@@ -144,7 +145,7 @@ const TeamChat = () => {
                 </button>
                 <div className="flex items-center gap-2">
                     <Hash className="w-5 h-5 text-zinc-400" />
-                    <h1 className="font-bold text-white tracking-tight">{channels.find(c => c.id === activeChannel)?.name}</h1>
+                    <h1 className="font-bold text-white tracking-tight">{channels.find(c => c.id === activeChannelId)?.name}</h1>
                 </div>
                 <div className="ml-auto flex items-center gap-4">
                     <Search className="w-5 h-5 text-zinc-400" />
@@ -167,12 +168,16 @@ const TeamChat = () => {
                             {channels.map(channel => (
                                 <button
                                     key={channel.id}
-                                    onClick={() => { setActiveChannel(channel.id); setSidebarOpen(false); }}
-                                    className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg group transition-colors ${activeChannel === channel.id ? 'bg-[#3f4147] text-white' : 'text-zinc-400 hover:bg-[#35373c] hover:text-zinc-300'
+                                    onClick={() => { setActiveChannelId(channel.id); setSidebarOpen(false); }}
+                                    className={`w-full flex items-center justify-between px-2 py-1.5 rounded-lg group transition-colors ${activeChannelId === channel.id ? 'bg-[#3f4147] text-white' : 'text-zinc-400 hover:bg-[#35373c] hover:text-zinc-300'
                                         }`}
                                 >
                                     <div className="flex items-center gap-1.5 font-medium">
-                                        <Hash className="w-4 h-4 text-zinc-500" />
+                                        {channel.slug === 'announcements' ? (
+                                            <Megaphone className="w-4 h-4 text-amber-400" />
+                                        ) : (
+                                            <Hash className="w-4 h-4 text-zinc-500" />
+                                        )}
                                         <span>{channel.name}</span>
                                     </div>
                                     {channel.unread > 0 && (
@@ -207,7 +212,7 @@ const TeamChat = () => {
                         {messages.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full text-zinc-500 opacity-50">
                                 <Hash className="w-16 h-16 mb-4" />
-                                <p>Это начало канала #{channels.find(c => c.id === activeChannel)?.name}</p>
+                                <p>Это начало канала #{channels.find(c => c.id === activeChannelId)?.name}</p>
                             </div>
                         ) : (
                             messages.map((msg, idx) => {
@@ -258,7 +263,7 @@ const TeamChat = () => {
                                 value={message}
                                 onChange={(e) => setMessage(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                                placeholder={`Написать в #${channels.find(c => c.id === activeChannel)?.name}`}
+                                placeholder={`Написать в #${channels.find(c => c.id === activeChannelId)?.name}`}
                                 className="flex-1 bg-transparent border-none text-zinc-200 placeholder-zinc-500 focus:ring-0 px-3 text-sm"
                             />
                             {message.trim() && (

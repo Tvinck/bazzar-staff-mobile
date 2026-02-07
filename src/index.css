@@ -1,142 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --tg-bg-color: #1c1c1e;
+    --tg-bg-color: #09090b;
     --tg-text-color: #ffffff;
-    --tg-hint-color: #8e8e93;
-    --tg-link-color: #007aff;
-    --tg-button-color: #007aff;
+    --tg-hint-color: #a1a1aa;
+    --tg-link-color: #3b82f6;
+    --tg-button-color: #3b82f6;
     --tg-button-text-color: #ffffff;
-    --tg-secondary-bg-color: #2c2c2e;
-  }
-
-  * {
-    -webkit-tap-highlight-color: transparent;
+    --tg-secondary-bg-color: #18181b;
   }
 
   html {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #1c1c1e;
-    color: #ffffff;
-    overscroll-behavior-y: none;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+    background-color: var(--tg-bg-color);
+    color: var(--tg-text-color);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
-    background-color: #1c1c1e;
-    color: white;
+    background-color: var(--tg-bg-color);
+    color: var(--tg-text-color);
     overflow-x: hidden;
-    -webkit-user-select: none;
+    overscroll-behavior-y: none;
+    /* Prevent rubber-banding on iOS */
     user-select: none;
-    margin: 0;
-    padding: 0;
+    -webkit-user-select: none;
   }
 
-  input,
-  textarea,
-  [contenteditable] {
-    -webkit-user-select: auto;
-    user-select: auto;
-  }
-
-  button {
-    -webkit-tap-highlight-color: transparent;
-    outline: none;
+  /* Smooth scrolling only for desktop/non-touch if needed, but usually avoided in SPA drag lists */
+  @media (pointer: fine) {
+    html {
+      scroll-behavior: smooth;
+    }
   }
 }
 
 @layer components {
-  .glass-panel {
-    background: rgba(44, 44, 46, 0.8);
+
+  /* Premium Glass Effect */
+  .glass {
+    background: rgba(24, 24, 27, 0.6);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
   .glass-card {
-    background: #2c2c2e;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 20px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  }
-
-  .fintech-card {
-    background: linear-gradient(135deg, rgba(44, 44, 46, 0.8) 0%, rgba(28, 28, 30, 0.8) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
     position: relative;
     overflow: hidden;
+    transition: all 0.3s;
+    background: linear-gradient(180deg, rgba(39, 39, 42, 0.7) 0%, rgba(24, 24, 27, 0.7) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   }
 
+  .glass-card:active {
+    transform: scale(0.98);
+    background: linear-gradient(180deg, rgba(39, 39, 42, 0.9) 0%, rgba(24, 24, 27, 0.9) 100%);
+  }
+
+  /* Neon Effects */
+  .neon-text {
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+  }
+
+  .neon-border {
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.2), inset 0 0 10px rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.5);
+  }
+
+  /* Safe Areas */
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 24px);
   }
 
   .pt-safe {
-    padding-top: env(safe-area-inset-top, 0px);
+    padding-top: env(safe-area-inset-top, 12px);
   }
 
-  .safe-area-top {
-    padding-top: env(safe-area-inset-top);
+  /* Custom Input Style */
+  .input-primary {
+    width: 100%;
+    background-color: rgba(39, 39, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    padding: 0.875rem 1rem;
+    color: white;
+    transition: all 0.2s;
+    outline: none;
   }
 
-  .tap-active {
-    transition: transform 100ms ease-out;
+  .input-primary::placeholder {
+    color: #71717a;
   }
 
-  .tap-active:active {
+  .input-primary:focus {
+    border-color: rgba(0, 122, 255, 0.5);
+    background-color: rgb(39, 39, 42);
+    box-shadow: 0 0 0 1px rgba(0, 122, 255, 0.5);
+  }
+
+  /* Custom Button Style */
+  .btn-primary {
+    width: 100%;
+    background-color: #007aff;
+    /* accent-blue */
+    color: white;
+    font-weight: 500;
+    border-radius: 0.75rem;
+    /* rounded-xl */
+    padding-top: 0.875rem;
+    /* py-3.5 */
+    padding-bottom: 0.875rem;
+    transition: transform 0.2s;
+    box-shadow: 0 10px 15px -3px rgba(0, 122, 255, 0.2), 0 4px 6px -2px rgba(0, 122, 255, 0.1);
+    /* shadow-lg shadow-accent-blue/20 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .btn-primary:active {
     transform: scale(0.95);
   }
 
-  /* Skeleton Loading */
-  .skeleton {
-    background: linear-gradient(90deg,
-        rgba(255, 255, 255, 0.05) 0%,
-        rgba(255, 255, 255, 0.1) 50%,
-        rgba(255, 255, 255, 0.05) 100%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
+  /* Glass Panel (Header) */
+  .glass-panel {
+    background: rgba(24, 24, 27, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  /* Fintech Card (List Items) */
+  .fintech-card {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+  }
+
+  .fintech-card:active {
+    transform: scale(0.98);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
   }
 }
 
-/* Hide scrollbars globally */
+/* Hide Scrollbar but keep functionality */
 ::-webkit-scrollbar {
   width: 0px;
-  height: 0px;
   background: transparent;
-}
-
-* {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-/* Custom scrollbar for specific elements if needed */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-/* Smooth transitions */
-@media (prefers-reduced-motion: no-preference) {
-  * {
-    scroll-behavior: smooth;
-  }
 }

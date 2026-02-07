@@ -41,31 +41,39 @@ export const useMainButton = (text, onClick, options = {}) => {
         };
 
         if (isVisible) {
-            // Настраиваем кнопку
-            tg.MainButton.setText(text);
-            tg.MainButton.setParams({
-                color,
-                text_color: textColor,
-                is_active: isActive,
-                is_visible: true
-            });
+            try {
+                // Настраиваем кнопку
+                tg.MainButton.setText(text);
+                tg.MainButton.setParams({
+                    color,
+                    text_color: textColor,
+                    is_active: isActive,
+                    is_visible: true
+                });
 
-            // Показываем/скрываем прогресс
-            if (isProgressVisible) {
-                tg.MainButton.showProgress(false); // false = не скрывать кнопку
-            } else {
-                tg.MainButton.hideProgress();
+                // Показываем/скрываем прогресс
+                if (isProgressVisible) {
+                    tg.MainButton.showProgress(false); // false = не скрывать кнопку
+                } else {
+                    tg.MainButton.hideProgress();
+                }
+
+                tg.MainButton.show();
+                tg.MainButton.onClick(handleClick);
+            } catch (e) {
+                console.warn('MainButton.show/setParams failed', e);
             }
-
-            tg.MainButton.show();
-            tg.MainButton.onClick(handleClick);
         }
 
         // Cleanup
         return () => {
-            tg.MainButton.offClick(handleClick);
-            tg.MainButton.hide();
-            tg.MainButton.hideProgress();
+            try {
+                tg.MainButton.offClick(handleClick);
+                tg.MainButton.hide();
+                tg.MainButton.hideProgress();
+            } catch (e) {
+                console.warn('MainButton cleanup failed', e);
+            }
         };
     }, [text, tg, options]);
 };

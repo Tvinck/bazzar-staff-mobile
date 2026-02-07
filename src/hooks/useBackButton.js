@@ -24,28 +24,40 @@ export const useBackButton = (options = {}) => {
         const shouldShow = show !== undefined ? show : !isHomePage;
 
         if (shouldShow) {
-            // Показываем кнопку
-            tg.BackButton.show();
+            try {
+                // Показываем кнопку
+                tg.BackButton.show();
 
-            // Обработчик клика
-            const handleBack = () => {
-                if (onClick) {
-                    onClick();
-                } else {
-                    navigate(-1);
-                }
-            };
+                // Обработчик клика
+                const handleBack = () => {
+                    if (onClick) {
+                        onClick();
+                    } else {
+                        navigate(-1);
+                    }
+                };
 
-            tg.BackButton.onClick(handleBack);
+                tg.BackButton.onClick(handleBack);
 
-            // Cleanup
-            return () => {
-                tg.BackButton.offClick(handleBack);
-                tg.BackButton.hide();
-            };
+                // Cleanup
+                return () => {
+                    try {
+                        tg.BackButton.offClick(handleBack);
+                        tg.BackButton.hide();
+                    } catch (e) {
+                        console.warn('BackButton cleanup failed', e);
+                    }
+                };
+            } catch (e) {
+                console.warn('BackButton.show failed', e);
+            }
         } else {
-            // Скрываем кнопку на главной странице
-            tg.BackButton.hide();
+            try {
+                // Скрываем кнопку на главной странице
+                tg.BackButton.hide();
+            } catch (e) {
+                console.warn('BackButton.hide failed', e);
+            }
         }
     }, [location, navigate, tg, options]);
 };

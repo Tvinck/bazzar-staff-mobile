@@ -18,10 +18,64 @@ const Toggle = ({ checked, onChange }) => (
     </div>
 );
 
-const SettingsModal = ({ isOpen, onClose }) => {
+const SettingsModal = ({ isOpen, onClose, userId }) => {
     const [pushEnabled, setPushEnabled] = useState(true);
-    const [emailDetails, setEmailDetails] = useState(false);
-    const [tgNotifs, setTgNotifs] = useState(true);
+    const [tgNotifs, setTgNotifs] = useState(false);
+    const [isLinked, setIsLinked] = useState(false);
+    const [botName, setBotName] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        if (isOpen && userId) {
+            fetchSettings();
+            fetchBotInfo();
+        }
+    }, [isOpen, userId]);
+
+    const fetchSettings = async () => {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('telegram_chat_id, telegram_notifications')
+            .eq('id', userId)
+            .single();
+
+        if (data) {
+            setIsLinked(!!data.telegram_chat_id);
+            setTgNotifs(data.telegram_notifications ?? true); // Default to true if linked
+        }
+    };
+
+    const fetchBotInfo = async () => {
+        try {
+            const { data, error } = await supabase.functions.invoke('telegram-bot', {
+                body: { action: 'get_bot_info' }
+            });
+            if (data?.bot_name) {
+                setBotName(data.bot_name);
+            }
+        } catch (e) {
+            console.error('Failed to fetch bot info', e);
+        }
+    };
+
+    const handleToggleTg = async (val) => {
+        setTgNotifs(val);
+        // Update in DB
+        await supabase.from('profiles').update({ telegram_notifications: val }).eq('id', userId);
+
+        if (val && !isLinked && botName) {
+            // If turning on and not linked, suggest linking
+            window.open(`https://t.me/${botName}?start=${userId}`, '_blank');
+        }
+    };
+
+    const handleConnectTg = () => {
+        if (!botName) {
+            toast.error('Бот не настроен');
+            return;
+        }
+        window.open(`https://t.me/${botName}?start=${userId}`, '_blank');
+    };
 
     if (!isOpen) return null;
 
@@ -106,16 +160,32 @@ const SettingsModal = ({ isOpen, onClose }) => {
                                     </div>
                                     <Toggle checked={pushEnabled} onChange={setPushEnabled} />
                                 </div>
-                                <div className="flex items-center justify-between p-4 border-b border-white/5">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                                            <svg className="w-4 h-4 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-8.609 3.33c-2.068.8-4.133 1.598-5.724 2.21a405.15 405.15 0 0 1-2.849 1.09c-.42.147-.99.332-1.473.901-.728.968.193 1.798.919 2.286 1.61.516 3.275 1.009 3.816 1.177l.176.056c.112.036.214.073.306.11l.002.001c.215.087.647.265.812.58.172.327.28.756.107 1.28l.001.002a7.712 7.712 0 0 1-.378 1.056l-.025.07c.504-.447 1.76-1.572 2.126-1.921l.365-.347c.725-.688 1.62-.843 2.067-.5.352.27.34.846.046 1.59-1.996 5.06-4.226 10.702-4.226 10.702-.194.509.309.845.688.845.26 0 .438-.13.754-.33 1.517-.96 4.67-2.956 6.55-4.168.397-.257.94-.655 1.07-1.189.231-.954 2.308-11.411 2.548-12.87a2.27 2.27 0 0 0-.25-1.583z" fill="currentColor" /></svg>
+                                <div className="p-4 flex flex-col gap-3">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                                                <svg className="w-4 h-4 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-8.609 3.33c-2.068.8-4.133 1.598-5.724 2.21a405.15 405.15 0 0 1-2.849 1.09c-.42.147-.99.332-1.473.901-.728.968.193 1.798.919 2.286 1.61.516 3.275 1.009 3.816 1.177l.176.056c.112.036.214.073.306.11l.002.001c.215.087.647.265.812.58.172.327.28.756.107 1.28l.001.002a7.712 7.712 0 0 1-.378 1.056l-.025.07c.504-.447 1.76-1.572 2.126-1.921l.365-.347c.725-.688 1.62-.843 2.067-.5.352.27.34.846.046 1.59-1.996 5.06-4.226 10.702-4.226 10.702-.194.509.309.845.688.845.26 0 .438-.13.754-.33 1.517-.96 4.67-2.956 6.55-4.168.397-.257.94-.655 1.07-1.189.231-.954 2.308-11.411 2.548-12.87a2.27 2.27 0 0 0-.25-1.583z" fill="currentColor" /></svg>
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-white">Telegram Бот</p>
+                                                {isLinked ? (
+                                                    <p className="text-[10px] text-emerald-500 font-medium">Подключено</p>
+                                                ) : (
+                                                    <p className="text-[10px] text-zinc-500">Не подключено</p>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-medium text-white">Telegram Бот</p>
-                                        </div>
+                                        {isLinked && <Toggle checked={tgNotifs} onChange={handleToggleTg} />}
                                     </div>
-                                    <Toggle checked={tgNotifs} onChange={setTgNotifs} />
+
+                                    {!isLinked && (
+                                        <button
+                                            onClick={handleConnectTg}
+                                            className="w-full mt-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs font-bold py-3 rounded-xl border border-blue-600/20 transition-all flex items-center justify-center gap-2"
+                                        >
+                                            Подключить Telegram
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -147,12 +217,6 @@ const SettingsModal = ({ isOpen, onClose }) => {
                                     <span className="text-xs font-bold text-zinc-400">Тёмная</span>
                                 </div>
                             </div>
-                        </div>
-
-                        <div className="pt-4">
-                            <button onClick={onClose} className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-500 active:scale-95 transition-all">
-                                Сохранить
-                            </button>
                         </div>
                     </div>
                 </motion.div>
@@ -338,111 +402,174 @@ const Profile = ({ onLogout }) => {
     return (
         <div className="min-h-screen pb-20">
             {/* Header */}
-            <div className="px-6 pt-12 pb-8 relative">
-                <button
+            <div className="relative pt-12 pb-6 px-6 overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-full bg-accent-blue/5 blur-[80px] pointer-events-none" />
+
+                <div className="relative z-10 flex flex-col items-center">
+                    <motion.div
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="relative mb-4 group"
+                    >
+                        <div className="w-28 h-28 rounded-[2rem] bg-gradient-to-br from-accent-blue via-blue-600 to-indigo-600 flex items-center justify-center p-1 shadow-[0_0_40px_rgba(59,130,246,0.3)] ring-1 ring-white/10 relative overflow-hidden">
+                            <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                            <User className="w-12 h-12 text-white drop-shadow-lg" />
+                        </div>
+                        <div className="absolute -bottom-3 -right-3">
+                            <div className="bg-[#09090b] p-1 rounded-full">
+                                <div className="bg-accent-green px-3 py-1 rounded-full flex items-center gap-1 shadow-lg shadow-green-500/20">
+                                    <span className="text-xs font-bold text-white uppercase tracking-wider">Lvl {level}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    <motion.h2
+                        initial={{ y: 10, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.1 }}
+                        className="text-2xl font-bold text-white tracking-tight"
+                    >
+                        {user?.email?.split('@')[0] || 'Сотрудник'}
+                    </motion.h2>
+                    <motion.p
+                        initial={{ y: 10, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-sm text-zinc-400 font-medium mb-4"
+                    >
+                        {user?.email}
+                    </motion.p>
+
+                    {/* XP Progress */}
+                    <motion.div
+                        initial={{ width: 0, opacity: 0 }}
+                        animate={{ width: "100%", opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className="w-full max-w-xs"
+                    >
+                        <div className="flex justify-between items-end mb-1.5 px-1">
+                            <span className="text-[10px] font-bold text-accent-blue uppercase tracking-wider">XP Progress</span>
+                            <span className="text-[10px] font-mono text-zinc-400">{xp} / {nextLevelXp}</span>
+                        </div>
+                        <div className="h-2 bg-white/5 rounded-full overflow-hidden border border-white/5 relative">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${progress}%` }}
+                                transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
+                                className="absolute top-0 left-0 h-full bg-gradient-to-r from-accent-blue to-accent-purple rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+                            />
+                        </div>
+                    </motion.div>
+                </div>
+
+                {/* Quick Actions (Absolute) */}
+                <motion.button
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    whileTap={{ scale: 0.9 }}
                     onClick={() => setIsSettingsOpen(true)}
-                    className="absolute top-12 right-6 p-2 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 active:scale-95 transition-all text-zinc-400 hover:text-white"
+                    className="absolute top-6 right-6 p-2.5 glass rounded-xl text-zinc-400 hover:text-white transition-colors"
                 >
                     <Settings className="w-5 h-5" />
-                </button>
+                </motion.button>
 
-                {/* Leaderboard Link Button (Left) */}
-                <button
+                <motion.button
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    whileTap={{ scale: 0.9 }}
                     onClick={() => navigate('/leaderboard')}
-                    className="absolute top-12 left-6 p-2 bg-gradient-to-br from-yellow-500/20 to-amber-600/20 rounded-xl border border-yellow-500/20 hover:border-yellow-500/40 active:scale-95 transition-all text-yellow-500 group"
+                    className="absolute top-6 left-6 p-2.5 glass rounded-xl text-yellow-500 hover:text-yellow-400 transition-colors border-yellow-500/20"
                 >
-                    <Trophy className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                </button>
-
-                <div className="flex flex-col items-center">
-                    <div className="relative mb-4">
-                        <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-xl shadow-blue-500/20 ring-4 ring-white/5">
-                            <User className="w-12 h-12 text-white" />
-                        </div>
-                        <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-emerald-500 rounded-full border-4 border-[#09090b] flex items-center justify-center shadow-lg">
-                            <span className="text-[10px] font-bold text-white">{level}</span>
-                        </div>
-                    </div>
-                    <h2 className="text-xl font-bold text-white tracking-tight">
-                        {user?.email?.split('@')[0] || 'Сотрудник'}
-                    </h2>
-                    <div className="mt-2 w-32 bg-zinc-800 rounded-full h-1.5 overflow-hidden">
-                        <div className="bg-blue-500 h-full rounded-full" style={{ width: `${progress}%` }}></div>
-                    </div>
-                    <p className="text-zinc-500 text-[10px] mt-1 font-mono">{xp} / {nextLevelXp} XP</p>
-                </div>
+                    <Trophy className="w-5 h-5" />
+                </motion.button>
             </div>
 
-            <div className="px-4 space-y-6">
-
-                {/* Gamification / Achievements */}
-                <div className="bg-white/5 rounded-3xl p-4 border border-white/5">
-                    <div className="flex items-center justify-between mb-4 px-1">
+            <div className="px-4 space-y-4 relative z-10">
+                {/* Achievements */}
+                <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className="glass-card rounded-3xl p-5"
+                >
+                    <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-bold text-white flex items-center gap-2">
                             <Award className="w-4 h-4 text-purple-400" />
                             Достижения
                         </h3>
-                        <span className="text-xs text-zinc-500">{achievements.filter(a => a.unlocked).length} из {achievements.length}</span>
+                        <div className="px-2 py-0.5 rounded-md bg-white/5 border border-white/5 text-[10px] font-medium text-zinc-400">
+                            {achievements.filter(a => a.unlocked).length} / {achievements.length}
+                        </div>
                     </div>
-                    <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                        {achievements.map(ach => (
-                            <div key={ach.id} className={`flex flex-col items-center gap-2 min-w-[70px] ${!ach.unlocked ? 'opacity-40 grayscale' : ''}`}>
-                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${ach.bg} border border-white/5`}>
-                                    <ach.icon className={`w-6 h-6 ${ach.color}`} />
+                    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-none snap-x">
+                        {achievements.map((ach) => (
+                            <div key={ach.id} className={`flex flex-col items-center gap-2 min-w-[72px] snap-center ${!ach.unlocked ? 'opacity-40 grayscale' : ''}`}>
+                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${ach.bg} border border-white/5 shadow-inner relative group`}>
+                                    <ach.icon className={`w-6 h-6 ${ach.color} drop-shadow-md group-hover:scale-110 transition-transform`} />
+                                    {ach.unlocked && <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />}
                                 </div>
-                                <span className="text-[10px] font-medium text-zinc-300">{ach.name}</span>
+                                <span className="text-[10px] font-medium text-zinc-400">{ach.name}</span>
                             </div>
                         ))}
                     </div>
-                </div>
+                </motion.div>
 
-                {/* My Earnings Section */}
-                <div className="fintech-card rounded-3xl p-6 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-50">
-                        <Wallet className="w-24 h-24 text-white/5 -rotate-12 transform translate-x-4 -translate-y-4" />
-                    </div>
+                {/* Earnings Card */}
+                <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="relative overflow-hidden rounded-3xl p-6 group"
+                >
+                    <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 to-black border border-white/10 rounded-3xl z-0" />
+                    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 z-0 mix-blend-overlay" />
+                    <div className="absolute top-0 right-0 p-8 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px] pointer-events-none" />
 
                     <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-2">
-                            <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
-                                <DollarSign className="w-4 h-4 text-emerald-400" />
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-2">
+                                <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                                    <Wallet className="w-4 h-4 text-emerald-400" />
+                                </div>
+                                <span className="text-sm font-medium text-zinc-300">Баланс</span>
                             </div>
-                            <span className="text-sm font-medium text-zinc-400">Мой заработок</span>
-                        </div>
-
-                        <div className="flex items-end gap-2 mb-6">
-                            <span className="text-4xl font-bold text-white tracking-tight">
-                                {earnings.balance.toLocaleString('ru-RU')} ₽
-                            </span>
-                            <span className="text-sm font-medium text-emerald-400 mb-1.5 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                            <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg border border-emerald-500/20 flex items-center gap-1">
+                                <ArrowUpRight className="w-3 h-3" />
                                 +{earnings.pending}
                             </span>
                         </div>
 
+                        <div className="mb-6">
+                            <span className="text-4xl font-bold text-white tracking-tighter block">
+                                {earnings.balance.toLocaleString('ru-RU')} ₽
+                            </span>
+                            <span className="text-xs text-zinc-500 font-medium mt-1 block">Доступно к выводу</span>
+                        </div>
+
                         <button
                             onClick={() => setIsWithdrawModalOpen(true)}
-                            className="w-full bg-white text-black font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-zinc-200 transition-colors active:scale-[0.98]"
+                            className="w-full bg-white text-black font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 hover:bg-zinc-200 transition-all active:scale-[0.98] shadow-lg shadow-white/5"
                         >
-                            <ArrowUpRight className="w-5 h-5" />
+                            <CreditCard className="w-4 h-4" />
                             Вывести средства
                         </button>
                     </div>
-                </div>
+                </motion.div>
 
-                {/* Logout Button */}
-                <button
+                {/* Logout */}
+                <motion.button
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.6 }}
                     onClick={handleLogout}
-                    className="w-full glass-panel rounded-2xl p-4 border border-red-500/20 active:bg-red-500/10 active:scale-[0.98] transition-all group mt-2 hover:border-red-500/30"
+                    className="w-full p-4 rounded-xl border border-red-500/10 bg-red-500/5 hover:bg-red-500/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
                 >
-                    <div className="flex items-center justify-center gap-2 text-red-500 group-hover:text-red-400">
-                        <LogOut className="w-5 h-5" />
-                        <span className="font-bold">Выйти из аккаунта</span>
-                    </div>
-                </button>
+                    <LogOut className="w-4 h-4 text-red-500 group-hover:scale-110 transition-transform" />
+                    <span className="text-sm font-bold text-red-500">Выйти</span>
+                </motion.button>
 
-                <p className="text-center text-xs text-zinc-600 mt-8 mb-4 font-medium">
-                    Версия 1.2.0 • BAZZAR Staff
-                </p>
+                <div className="h-8" />
             </div>
 
             <WithdrawModal
@@ -454,6 +581,7 @@ const Profile = ({ onLogout }) => {
             <SettingsModal
                 isOpen={isSettingsOpen}
                 onClose={() => setIsSettingsOpen(false)}
+                userId={user?.id}
             />
 
             <BottomNav />

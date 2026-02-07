@@ -24,8 +24,8 @@ const Leaderboard = () => {
             if (data && data.length > 0) {
                 setLeaders(data.map((item, index) => ({
                     id: item.user_id,
-                    name: item.email ? item.email.split('@')[0] : 'User', // Mock name from email
-                    avatar: (item.email?.[0] || 'U').toUpperCase(),
+                    name: item.full_name || (item.email ? item.email.split('@')[0] : 'User'),
+                    avatar: item.avatar_url || (item.full_name?.[0] || item.email?.[0] || 'U').toUpperCase(),
                     role: 'Staff',
                     xp: item.total_xp,
                     orders: Math.floor(item.total_xp / 100), // Mock calc

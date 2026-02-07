@@ -1,0 +1,391 @@
+[
+  {
+    "id": "TC001",
+    "title": "Successful login with valid credentials",
+    "description": "Verify that a user can log in successfully using valid credentials and is redirected to the staff dashboard.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the login page"
+      },
+      {
+        "type": "action",
+        "description": "Enter valid username and password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is authenticated via Supabase and redirected to the staff dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard displays relevant staff data and interface elements"
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "Login failure with invalid credentials",
+    "description": "Ensure that login attempt with invalid credentials fails and an appropriate error message is displayed.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to the login page"
+      },
+      {
+        "type": "action",
+        "description": "Enter invalid username and/or password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify authentication fails and no user session is created"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify error message is displayed and login form remains visible"
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Role-based access control enforcement",
+    "description": "Verify that users with different roles have access only to permitted features and pages.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in as a user with role A"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access to dashboard and permitted pages specific to role A"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to access restricted pages for role A"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access is denied or redirected appropriately"
+      },
+      {
+        "type": "action",
+        "description": "Switch to a user with role B"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access to pages permitted for role B and restrictions enforced"
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Dashboard data loading and display correctness",
+    "description": "Verify the dashboard page loads properly and displays accurate and relevant staff information.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in as a staff user"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to the dashboard page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify dashboard UI is rendered with correct TailwindCSS styling"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify relevant operations and data for the staff user are displayed correctly"
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Bottom navigation functionality and consistency",
+    "description": "Verify the bottom navigation enables access to all key pages and remains consistent across the app.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in as staff user"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify bottom navigation is visible and styled per design"
+      },
+      {
+        "type": "action",
+        "description": "Use bottom navigation to access Market Statistics page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify Market Statistics page loads and data is displayed"
+      },
+      {
+        "type": "action",
+        "description": "Use bottom navigation to access Leaderboard page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify Leaderboard page loads and displays correct rankings"
+      },
+      {
+        "type": "action",
+        "description": "Use bottom navigation to access Staff Services page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify Staff Services page loads and allows interaction"
+      },
+      {
+        "type": "action",
+        "description": "Switch between pages multiple times"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify navigation remains consistent, no broken links, or UI glitches"
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Market Statistics page data accuracy and update",
+    "description": "Verify that the Market Statistics page displays accurate business insights and updates data in realtime as backend changes.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to Market Statistics page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that statistics data matches expected backend data"
+      },
+      {
+        "type": "action",
+        "description": "Trigger backend data changes (e.g., simulate new data in Supabase)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the statistics page updates to reflect new data without manual refresh"
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Leaderboard view correctness and performance",
+    "description": "Verify Leaderboard page correctly displays rankings relevant to staff roles and handles large data efficiently.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to Leaderboard page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify leaderboard rankings match expected data for the logged in user's role"
+      },
+      {
+        "type": "action",
+        "description": "Simulate large leaderboard data set in backend"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the leaderboard renders correctly without performance degradation or UI breakage"
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Staff Services management functionality",
+    "description": "Ensure the Staff Services page allows users to view, add, edit, and delete staff-related services as per role permissions.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to Staff Services page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify existing services are listed correctly"
+      },
+      {
+        "type": "action",
+        "description": "Add a new staff service"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify new service appears in the list and is saved to backend"
+      },
+      {
+        "type": "action",
+        "description": "Edit an existing staff service"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify updated information is saved and displayed correctly"
+      },
+      {
+        "type": "action",
+        "description": "Delete a staff service"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the service is removed from the list and backend"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Supabase client connection success",
+    "description": "Verify the application successfully connects to Supabase backend services for authentication and data retrieval.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Start the application and initiate authentication request"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify Supabase client connects without errors"
+      },
+      {
+        "type": "action",
+        "description": "Perform a data fetch from Supabase (e.g., fetching staff services or statistics)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify data is retrieved successfully and reflects current backend state"
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "UI styling and visual elements load correctly",
+    "description": "Verify that all TailwindCSS styles are applied correctly including gradient backgrounds, blurred transparent forms, icon-enhanced inputs, animated background blobs, and styled buttons.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Load the login page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify gradient backgrounds and blurred transparent form are rendered"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify icons are present in input fields"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify animated background blobs are visible and smooth"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify buttons are styled as per design document"
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "UI styling consistency after browser refresh and cache clear",
+    "description": "Verify that styling issues are fixed upon browser refresh and cache clearing as per validation criteria.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Load the app and observe UI styling"
+      },
+      {
+        "type": "action",
+        "description": "Refresh the browser"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify UI styling is correct post refresh"
+      },
+      {
+        "type": "action",
+        "description": "Clear browser cache and reload the app"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify all styles including TailwindCSS effects load correctly with no visual glitches"
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "User logout functionality",
+    "description": "Ensure that the user can log out successfully, terminating their session and returning to the login page.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Log in as a staff user"
+      },
+      {
+        "type": "action",
+        "description": "Initiate logout from any page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user session is terminated in Supabase"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is redirected to the login page"
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Handle backend disconnect or Supabase errors gracefully",
+    "description": "Verify that if Supabase backend is unavailable or returns errors, the app handles them gracefully and informs the user appropriately.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Simulate Supabase backend connection failure or error"
+      },
+      {
+        "type": "action",
+        "description": "Attempt login or data fetch operation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the app displays a meaningful error message to the user"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify app does not crash and remains responsive"
+      }
+    ]
+  }
+]

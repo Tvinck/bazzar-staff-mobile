@@ -1,0 +1,55 @@
+{
+    "tech_stack": [
+        "React",
+        "Vite",
+        "TailwindCSS",
+        "Supabase",
+        "JavaScript"
+    ],
+    "features": [
+        {
+            "name": "Authentication",
+            "description": "User authentication and potential role management.",
+            "files": [
+                "src/hooks/useAuth.jsx",
+                "src/App.jsx"
+            ]
+        },
+        {
+            "name": "Dashboard",
+            "description": "Main dashboard for staff users.",
+            "files": [
+                "src/pages/Dashboard.jsx"
+            ]
+        },
+        {
+            "name": "Market Statistics",
+            "description": "Statistics view and management.",
+            "files": [
+                "src/pages/Accounting.jsx",
+                "src/pages/Leaderboard.jsx"
+            ]
+        },
+        {
+            "name": "Navigation",
+            "description": "App navigation components.",
+            "files": [
+                "src/components/BottomNav.jsx"
+            ]
+        },
+        {
+            "name": "Services",
+            "description": "Staff services management.",
+            "files": [
+                "src/pages/services/Staff.jsx"
+            ]
+        },
+        {
+            "name": "Supabase Client",
+            "description": "Database connection and client.",
+            "files": [
+                "src/supabase.js"
+            ]
+        }
+    ]
+}

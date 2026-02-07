@@ -1,0 +1,98 @@
+{
+  "meta": {
+    "project": "Bazzar Staff Mobile",
+    "date": "2026-02-06",
+    "prepared_by": "Software Development Manager"
+  },
+  "product_overview": "Bazzar Staff Mobile is a React-based staff management mobile web application leveraging Vite, TailwindCSS, and Supabase for a responsive and secure experience. It provides staff users with functionalities like authentication, dashboard access, market statistics, and service management within an optimized mobile interface.",
+  "core_goals": [
+    "Provide secure and robust user authentication with role management.",
+    "Deliver staff users a responsive and informative dashboard to manage daily operations.",
+    "Present market statistics and leaderboard views to inform business decisions.",
+    "Facilitate easy navigation across app sections via bottom navigation.",
+    "Ensure seamless integration with Supabase backend for realtime data and authentication.",
+    "Maintain high visual and interactive standards using TailwindCSS styling and animations."
+  ],
+  "key_features": [
+    "Authentication system enabling user login and potential role-based access control.",
+    "Main dashboard page tailored for staff users displaying relevant operations and information.",
+    "Market statistics and leaderboard pages presenting business insights and performance metrics.",
+    "Bottom navigation component for consistent and intuitive app navigation.",
+    "Staff services management page to facilitate handling of staff-related services.",
+    "Supabase client integration for backend communication, authentication, and data storage.",
+    "Visual and UI improvements using TailwindCSS including gradient backgrounds, blurred transparent forms, icons in input fields, animated background blobs, and styled buttons as specified in design documentation."
+  ],
+  "user_flow_summary": [
+    "User visits app and is presented with a stylish login page featuring gradient background and blurred transparent form with icon-enhanced inputs.",
+    "Upon entering valid credentials, user is authenticated via Supabase and navigated to the staff dashboard.",
+    "From the dashboard, users can navigate using bottom navigation to access Market Statistics, Leaderboard, or Staff Services pages.",
+    "Users interact with statistics views to analyze market data and leaderboard rankings relevant to staff roles.",
+    "Staff can manage services efficiently through the dedicated Staff Services page.",
+    "User can log out or switch roles as permitted within authentication system."
+  ],
+  "validation_criteria": [
+    "TailwindCSS styles load correctly ensuring visual elements like gradient backgrounds, animations, and input styling are present.",
+    "Authentication flow is fully functional with correct login and role management.",
+    "Dashboard loads and displays proper staff data and interface elements.",
+    "Navigation through bottom navigation is consistent and allows access to all key pages.",
+    "Market statistics and leaderboard data display accurately and update as required.",
+    "Staff services management features are accessible and functional.",
+    "Supabase client connects successfully to backend services.",
+    "Browser refresh and cache clear fix styling issues as documented in design fixes."
+  ],
+  "code_summary": {
+    "tech_stack": [
+      "React",
+      "Vite",
+      "TailwindCSS",
+      "Supabase",
+      "JavaScript"
+    ],
+    "features": [
+      {
+        "name": "Authentication",
+        "description": "User authentication and potential role management.",
+        "files": [
+          "src/hooks/useAuth.jsx",
+          "src/App.jsx"
+        ]
+      },
+      {
+        "name": "Dashboard",
+        "description": "Main dashboard for staff users.",
+        "files": [
+          "src/pages/Dashboard.jsx"
+        ]
+      },
+      {
+        "name": "Market Statistics",
+        "description": "Statistics view and management.",
+        "files": [
+          "src/pages/Accounting.jsx",
+          "src/pages/Leaderboard.jsx"
+        ]
+      },
+      {
+        "name": "Navigation",
+        "description": "App navigation components.",
+        "files": [
+          "src/components/BottomNav.jsx"
+        ]
+      },
+      {
+        "name": "Services",
+        "description": "Staff services management.",
+        "files": [
+          "src/pages/services/Staff.jsx"
+        ]
+      },
+      {
+        "name": "Supabase Client",
+        "description": "Database connection and client.",
+        "files": [
+          "src/supabase.js"
+        ]
+      }
+    ]
+  }
+}

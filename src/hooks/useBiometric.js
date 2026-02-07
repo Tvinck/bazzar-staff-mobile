@@ -14,7 +14,6 @@ export const useBiometric = () => {
 
     useEffect(() => {
         if (!tg?.BiometricManager) {
-            setIsAvailable(false);
             return;
         }
 

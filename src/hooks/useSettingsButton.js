@@ -14,15 +14,27 @@ export const useSettingsButton = (onClick, isVisible = true) => {
         if (!tg?.SettingsButton) return;
 
         if (isVisible && onClick) {
-            tg.SettingsButton.show();
-            tg.SettingsButton.onClick(onClick);
+            try {
+                tg.SettingsButton.show();
+                tg.SettingsButton.onClick(onClick);
 
-            return () => {
-                tg.SettingsButton.offClick(onClick);
-                tg.SettingsButton.hide();
-            };
+                return () => {
+                    try {
+                        tg.SettingsButton.offClick(onClick);
+                        tg.SettingsButton.hide();
+                    } catch (e) {
+                        console.warn('SettingsButton cleanup failed', e);
+                    }
+                };
+            } catch (e) {
+                console.warn('SettingsButton.show failed', e);
+            }
         } else {
-            tg.SettingsButton.hide();
+            try {
+                tg.SettingsButton.hide();
+            } catch (e) {
+                console.warn('SettingsButton.hide failed', e);
+            }
         }
     }, [tg, onClick, isVisible]);
 };

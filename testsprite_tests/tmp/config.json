@@ -1,0 +1,21 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:5173",
+  "loginUser": "ukoshelev.04@yandex.ru",
+  "loginPassword": "Qwerty14",
+  "executionArgs": {
+    "projectName": "bazzar-staff-mobile",
+    "projectPath": "/Users/macbookpro/Desktop/BAZZAR PRODJECT'S/BAZZAR MARKET/bazzar-staff-mobile",
+    "testIds": [
+      "TC001"
+    ],
+    "additionalInstruction": "Use Vitest and React Testing Library. Ensure Supabase is mocked correctly. Only generate and run TC001 for now to verify setup.",
+    "envs": {
+      "API_KEY": "sk-user-nzKPIpjsZykLVVZBpVJb8fFVHXqCb9AfzSxX_paogEn1GsFUZhm_vXF-wbJJCkBPpQ0TmsehPbkWU9cEiuq6kiim6DaLXrC7JfIWrW3lcvJg8JU38RIkmqu0Dp5mxy6uwzI"
+    }
+  },
+  "serverPort": 61644,
+  "proxy": "http://3b5d6a0d-53a3-4648-93bf-46a9001226b6:hckgFpYDSqlQz1b6DWLyQOBerVnvpFlg@tun.testsprite.com:8080"
+}

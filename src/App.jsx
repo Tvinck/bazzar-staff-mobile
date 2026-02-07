@@ -9,6 +9,7 @@ import { setupTelegramApp } from './utils/telegram';
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
 import Onboarding from './components/Onboarding';
 import PageTransition from './components/PageTransition';
+import LoadingScreen from './components/LoadingScreen';
 
 // Lazy Load Pages
 const Login = lazy(() => import('./pages/Login'));
@@ -31,26 +32,22 @@ const News = lazy(() => import('./pages/News'));
 const TeamChat = lazy(() => import('./pages/TeamChat'));
 const Leaderboard = lazy(() => import('./pages/Leaderboard'));
 const Wiki = lazy(() => import('./pages/Wiki'));
+const Procedures = lazy(() => import('./pages/Procedures'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const Chats = lazy(() => import('./pages/Chats'));
+const ChatDetail = lazy(() => import('./pages/ChatDetail'));
 
-const LoadingScreen = () => (
-  <div className="min-h-screen bg-[#1c1c1e] flex items-center justify-center text-white">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-  </div>
-);
+
 
 function AppContent() {
   const location = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isPinVerified, setIsPinVerified] = useState(false);
+  const [isPinVerified, setIsPinVerified] = useState(false); // Production mode: enabled
   const [isLoading, setIsLoading] = useState(true);
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(() => !localStorage.getItem('bazzar_onboarding_completed'));
 
   useEffect(() => {
     setupTelegramApp();
-
-    const visited = localStorage.getItem('bazzar_onboarding_completed');
-    if (!visited) setShowOnboarding(true);
 
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -58,7 +55,7 @@ function AppContent() {
         setIsAuthenticated(true);
       } else {
         setIsAuthenticated(false);
-        setIsPinVerified(false);
+        // setIsPinVerified(false); // Commented out
       }
       setIsLoading(false);
     };
@@ -67,7 +64,7 @@ function AppContent() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
-      if (!session) setIsPinVerified(false);
+      // if (!session) setIsPinVerified(false); // Commented out
     });
 
     return () => subscription.unsubscribe();
@@ -121,7 +118,7 @@ function AppContent() {
 
   // 5. App Routes
   return (
-    <div className="bg-[#1c1c1e] min-h-screen text-white">
+    <div className="bg-[var(--tg-bg-color)] min-h-screen text-white overflow-hidden">
       <Suspense fallback={<LoadingScreen />}>
         <AnimatePresence mode="wait" initial={false}>
           <Routes location={location} key={location.pathname}>
@@ -132,6 +129,9 @@ function AppContent() {
             <Route path="/services/monitoring" element={<PageTransition><Monitoring /></PageTransition>} />
             <Route path="/services/staff" element={<PageTransition><Staff /></PageTransition>} />
             <Route path="/services/desslyhub" element={<PageTransition><DesslyHub /></PageTransition>} />
+
+            <Route path="/chats" element={<PageTransition><Chats /></PageTransition>} />
+            <Route path="/chats/:id" element={<PageTransition><ChatDetail /></PageTransition>} />
 
             <Route element={<ProtectedAdminRoute />}>
               <Route path="/services/mighty" element={<PageTransition><Mighty /></PageTransition>} />
@@ -147,6 +147,7 @@ function AppContent() {
             <Route path="/chat" element={<PageTransition><TeamChat /></PageTransition>} />
             <Route path="/leaderboard" element={<PageTransition><Leaderboard /></PageTransition>} />
             <Route path="/wiki" element={<PageTransition><Wiki /></PageTransition>} />
+            <Route path="/procedures" element={<PageTransition><Procedures /></PageTransition>} />
             <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
           </Routes>
         </AnimatePresence>
