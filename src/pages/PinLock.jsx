@@ -15,19 +15,13 @@ const PinLock = ({ onSuccess, onForgot, mode: propMode }) => {
     useEffect(() => {
         const savedPin = localStorage.getItem('bazzar_staff_pin');
 
-        if (propMode) {
-            setMode(propMode);
-            if (propMode === 'create') setMessage('Придумайте код доступа');
-            else setMessage('Введите код доступа');
+        if (!savedPin || propMode === 'create') {
+            setMode('create');
+            setMessage('Придумайте код доступа');
         } else {
-            if (!savedPin) {
-                setMode('create');
-                setMessage('Придумайте код доступа');
-            } else {
-                setMode('check');
-                setMessage('Введите код доступа');
-                checkBiometrics();
-            }
+            setMode(propMode || 'check');
+            setMessage('Введите код доступа');
+            checkBiometrics();
         }
     }, [propMode]);
 

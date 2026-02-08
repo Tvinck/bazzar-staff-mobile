@@ -18,7 +18,7 @@ const Toggle = ({ checked, onChange }) => (
     </div>
 );
 
-const SettingsModal = ({ isOpen, onClose, userId }) => {
+const SettingsModal = ({ isOpen, onClose, userId, onResetPin }) => {
     const [pushEnabled, setPushEnabled] = useState(true);
     const [tgNotifs, setTgNotifs] = useState(false);
     const [isLinked, setIsLinked] = useState(false);
@@ -83,8 +83,20 @@ const SettingsModal = ({ isOpen, onClose, userId }) => {
         toast.success('Ссылка на сброс пароля отправлена на email');
     };
 
-    const handlePinChange = () => {
-        toast.info('Функция смены PIN-кода будет доступна в следующем обновлении');
+    const handlePinChange = async () => {
+        const confirmed = await showDialog({
+            title: 'Сменить PIN-код?',
+            message: 'Текущий код будет удален, и вы сможете установить новый.',
+            okText: 'Сменить',
+            cancelText: 'Отмена'
+        });
+
+        if (confirmed) {
+            localStorage.removeItem('bazzar_staff_pin');
+            onResetPin();
+            onClose();
+            toast.success('PIN-код удален. Установите новый.');
+        }
     };
 
     return (
@@ -321,7 +333,7 @@ const WithdrawModal = ({ isOpen, onClose, balance }) => {
     );
 };
 
-const Profile = ({ onLogout }) => {
+const Profile = ({ onLogout, onResetPin }) => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
@@ -582,6 +594,7 @@ const Profile = ({ onLogout }) => {
                 isOpen={isSettingsOpen}
                 onClose={() => setIsSettingsOpen(false)}
                 userId={user?.id}
+                onResetPin={onResetPin}
             />
 
             <BottomNav />

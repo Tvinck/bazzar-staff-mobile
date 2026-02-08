@@ -98,7 +98,7 @@ const Login = ({ onLogin }) => {
         if (e) e.preventDefault();
         const cleanCode = emailCode.replace(/\s/g, '');
         if (cleanCode.length < 6) {
-            toast.error('Введите 6 цифр');
+            toast.error('Введите код из письма');
             return;
         }
 
@@ -324,21 +324,21 @@ const Login = ({ onLogin }) => {
                                         <input
                                             type="text"
                                             inputMode="numeric"
-                                            placeholder="000 000"
+                                            placeholder="00000000"
                                             value={emailCode}
                                             onChange={(e) => {
                                                 const val = e.target.value.replace(/[^0-9]/g, '');
                                                 setEmailCode(val);
-                                                if (val.length === 6) {
-                                                    // Auto-submit when 6 digits are reached
+                                                if (val.length === 8 || val.length === 6) {
+                                                    // Auto-submit when logic length is reached
                                                     setTimeout(() => handleRegisterStep2(), 100);
                                                 }
                                             }}
-                                            className="bg-transparent border-b-2 border-white/20 text-center text-4xl tracking-[0.4em] py-4 text-white focus:border-blue-500 transition-colors font-mono outline-none w-full max-w-[200px]"
-                                            maxLength={6}
+                                            className="bg-transparent border-b-2 border-white/20 text-center text-4xl tracking-[0.2em] py-4 text-white focus:border-blue-500 transition-colors font-mono outline-none w-full max-w-[280px]"
+                                            maxLength={8}
                                         />
                                         <div className="mt-4 flex flex-col items-center gap-4">
-                                            <p className="text-zinc-600 text-[10px] font-bold uppercase text-center">Мы отправили письмо на {email}.<br />Введите 6-значный код из письма.</p>
+                                            <p className="text-zinc-600 text-[10px] font-bold uppercase text-center">Мы отправили письмо на {email}.<br />Введите код из письма.</p>
 
                                             <div className="flex flex-col gap-2 w-full px-4">
                                                 <button

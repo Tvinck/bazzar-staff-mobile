@@ -71,7 +71,10 @@ function AppContent() {
   }, []);
 
   const handleLogin = () => setIsAuthenticated(true);
-  const handleLogout = async () => {
+  const handleLogout = async (resetPin = false) => {
+    if (resetPin) {
+      localStorage.removeItem('bazzar_staff_pin');
+    }
     await supabase.auth.signOut();
     setIsAuthenticated(false);
     setIsPinVerified(false);
@@ -110,7 +113,7 @@ function AppContent() {
     return (
       <PageTransition key="pin">
         <Suspense fallback={<LoadingScreen />}>
-          <PinLock onSuccess={handlePinSuccess} mode="check" onForgot={() => handleLogout()} />
+          <PinLock onSuccess={handlePinSuccess} mode="check" onForgot={() => handleLogout(true)} />
         </Suspense>
       </PageTransition>
     );
@@ -141,7 +144,7 @@ function AppContent() {
             <Route path="/tasks" element={<PageTransition><Tasks /></PageTransition>} />
             <Route path="/accounting" element={<PageTransition><Accounting /></PageTransition>} />
             <Route path="/search" element={<PageTransition><Search /></PageTransition>} />
-            <Route path="/profile" element={<PageTransition><Profile onLogout={handleLogout} /></PageTransition>} />
+            <Route path="/profile" element={<PageTransition><Profile onLogout={handleLogout} onResetPin={() => setIsPinVerified(false)} /></PageTransition>} />
             <Route path="/notifications" element={<PageTransition><Notifications /></PageTransition>} />
             <Route path="/news" element={<PageTransition><News /></PageTransition>} />
             <Route path="/chat" element={<PageTransition><TeamChat /></PageTransition>} />
